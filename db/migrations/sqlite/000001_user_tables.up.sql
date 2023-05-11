@@ -1,5 +1,5 @@
 CREATE TABLE `user` (
-    `id` TEXT PRIMARY KEY,
+    `id` TEXT PRIMARY KEY NOT NULL,
     `first_name` TEXT NOT NULL,
     `last_name` TEXT NOT NULL,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -16,7 +16,7 @@ BEGIN
 END;
 
 CREATE TABLE `email` (
-    `id` TEXT PRIMARY KEY,
+    `id` TEXT PRIMARY KEY NOT NULL,
     `user_id` TEXT NOT NULL,
     `email` TEXT NOT NULL UNIQUE,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -34,7 +34,7 @@ BEGIN
 END;
 
 CREATE TABLE `password` (
-    `id` TEXT PRIMARY KEY,
+    `id` TEXT PRIMARY KEY NOT NULL,
     `user_id` TEXT NOT NULL UNIQUE,
     `hash` TEXT NOT NULL,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

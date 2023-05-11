@@ -1,20 +1,33 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/gofrs/uuid/v5"
 	"github.com/mattmeyers/level"
+	"github.com/ninth-realm/heimdall/store"
 )
 
 type Server struct {
 	Logger level.Logger
-
 	Router chi.Router
+
+	UserService UserService
+}
+
+type UserService interface {
+	ListUsers(ctx context.Context) ([]store.User, error)
+	GetUser(ctx context.Context, id uuid.UUID) (store.User, error)
+	CreateUser(ctx context.Context, user store.NewUser) (store.User, error)
+	UpdateUser(ctx context.Context, id uuid.UUID, patch store.UserPatch) (store.User, error)
+	DeleteUser(ctx context.Context, id uuid.UUID) error
 }
 
 // NewServer builds a new server object with the default middleware and router
@@ -53,7 +66,21 @@ const requestBodyLimit = 5_242_880
 // Reads a request body into the provided destination. It is expected that the
 // `dst` parameter is a pointer and that the request body is JSON.
 func (s *Server) decode(r *http.Request, dst any) error {
-	return json.NewDecoder(io.LimitReader(r.Body, requestBodyLimit)).Decode(dst)
+	buf, err := io.ReadAll(io.LimitReader(r.Body, requestBodyLimit))
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(buf, dst)
+
+	unmarshalErr := &json.UnmarshalTypeError{}
+	if errors.As(err, &unmarshalErr) {
+		return fmt.Errorf("%s: %v", unmarshalErr.Field, err)
+	} else if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Writes a response to the client. All responses are written in an envelope with
@@ -68,6 +95,7 @@ func (s *Server) respond(w http.ResponseWriter, r *http.Request, status int, dat
 		Response any `json:"response"`
 	}
 
+	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(status)
 	err := json.NewEncoder(w).Encode(envelope{Response: data})
 	if err != nil {
@@ -89,6 +117,7 @@ func (s *Server) respondWithError(w http.ResponseWriter, r *http.Request, status
 		data = errors.New(http.StatusText(status))
 	}
 
+	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(status)
 	err := json.NewEncoder(w).Encode(envelope{Code: status, Error: data.Error()})
 	if err != nil {

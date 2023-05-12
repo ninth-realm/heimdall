@@ -1,7 +1,6 @@
 package store
 
 import (
-	"context"
 	"strings"
 	"time"
 
@@ -19,6 +18,7 @@ type User struct {
 type NewUser struct {
 	FirstName string
 	LastName  string
+	Password  *string
 }
 
 type UserPatch struct {
@@ -39,9 +39,9 @@ func (p UserPatch) ApplyTo(user User) User {
 }
 
 type UserRepository interface {
-	ListUsers(ctx context.Context) ([]User, error)
-	GetUserById(ctx context.Context, id uuid.UUID) (User, error)
-	InsertUser(ctx context.Context, user NewUser) (uuid.UUID, error)
-	SaveUser(ctx context.Context, user User) error
-	DeleteUser(ctx context.Context, id uuid.UUID) error
+	ListUsers(opts QueryOptions) ([]User, error)
+	GetUserById(id uuid.UUID, opts QueryOptions) (User, error)
+	InsertUser(user NewUser, opts QueryOptions) (uuid.UUID, error)
+	SaveUser(user User, opts QueryOptions) error
+	DeleteUser(id uuid.UUID, opts QueryOptions) error
 }

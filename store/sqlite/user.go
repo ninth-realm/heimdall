@@ -1,15 +1,13 @@
 package sqlite
 
 import (
-	"context"
 	"errors"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/ninth-realm/heimdall/store"
 )
 
-func (db DB) ListUsers(ctx context.Context) ([]store.User, error) {
-
+func (db DB) ListUsers(opts store.QueryOptions) ([]store.User, error) {
 	const query = `
 		SELECT
 			id,
@@ -21,7 +19,7 @@ func (db DB) ListUsers(ctx context.Context) ([]store.User, error) {
 			` + "`user`"
 
 	var users []store.User
-	err := db.Conn.SelectContext(ctx, &users, query)
+	err := db.querier(opts.Txn).SelectContext(opts.Context(), &users, query)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +27,7 @@ func (db DB) ListUsers(ctx context.Context) ([]store.User, error) {
 	return users, nil
 }
 
-func (db DB) GetUserById(ctx context.Context, id uuid.UUID) (store.User, error) {
+func (db DB) GetUserById(id uuid.UUID, opts store.QueryOptions) (store.User, error) {
 	const query = `
 		SELECT
 			id,
@@ -44,7 +42,8 @@ func (db DB) GetUserById(ctx context.Context, id uuid.UUID) (store.User, error) 
 	`
 
 	var user store.User
-	err := db.Conn.GetContext(ctx, &user, query, id)
+	err := db.querier(opts.Txn).GetContext(opts.Context(), &user, query, id)
+
 	if err != nil {
 		return store.User{}, err
 	}
@@ -52,7 +51,7 @@ func (db DB) GetUserById(ctx context.Context, id uuid.UUID) (store.User, error) 
 	return user, nil
 }
 
-func (db DB) InsertUser(ctx context.Context, user store.NewUser) (uuid.UUID, error) {
+func (db DB) InsertUser(user store.NewUser, opts store.QueryOptions) (uuid.UUID, error) {
 	const query = `
 		INSERT INTO` + "`user`" + `
 			(id, first_name, last_name)
@@ -61,7 +60,14 @@ func (db DB) InsertUser(ctx context.Context, user store.NewUser) (uuid.UUID, err
 	`
 
 	id := db.UUIDGenerator.GenerateUUID()
-	_, err := db.Conn.ExecContext(ctx, query, id, user.FirstName, user.LastName)
+	_, err := db.querier(opts.Txn).ExecContext(
+		opts.Context(),
+		query,
+		id,
+		user.FirstName,
+		user.LastName,
+	)
+
 	if err != nil {
 		return uuid.Nil, err
 	}
@@ -69,7 +75,7 @@ func (db DB) InsertUser(ctx context.Context, user store.NewUser) (uuid.UUID, err
 	return id, nil
 }
 
-func (db DB) SaveUser(ctx context.Context, user store.User) error {
+func (db DB) SaveUser(user store.User, opts store.QueryOptions) error {
 	const query = `
 		UPDATE` + "`user`" + `
 		SET
@@ -79,7 +85,14 @@ func (db DB) SaveUser(ctx context.Context, user store.User) error {
 			id = ?
 	`
 
-	_, err := db.Conn.ExecContext(ctx, query, user.FirstName, user.LastName, user.ID)
+	_, err := db.querier(opts.Txn).ExecContext(
+		opts.Context(),
+		query,
+		user.FirstName,
+		user.LastName,
+		user.ID,
+	)
+
 	if err != nil {
 		return err
 	}
@@ -87,14 +100,14 @@ func (db DB) SaveUser(ctx context.Context, user store.User) error {
 	return nil
 }
 
-func (db DB) DeleteUser(ctx context.Context, id uuid.UUID) error {
+func (db DB) DeleteUser(id uuid.UUID, opts store.QueryOptions) error {
 	const query = `
 		DELETE FROM` + "`user`" + `
 		WHERE
 			id = ?
 	`
 
-	res, err := db.Conn.ExecContext(ctx, query, id)
+	res, err := db.querier(opts.Txn).ExecContext(opts.Ctx, query, id)
 	if err != nil {
 		return err
 	}

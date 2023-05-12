@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -22,8 +23,9 @@ func (s *Server) handleUsersList() http.HandlerFunc {
 
 func (s *Server) handleUsersCreate() http.HandlerFunc {
 	type request struct {
-		FirstName nonEmptyString `json:"firstName"`
-		LastName  nonEmptyString `json:"lastName"`
+		FirstName nonEmptyString           `json:"firstName"`
+		LastName  nonEmptyString           `json:"lastName"`
+		Password  optional[nonEmptyString] `json:"password"`
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -34,9 +36,12 @@ func (s *Server) handleUsersCreate() http.HandlerFunc {
 			return
 		}
 
+		fmt.Printf("%+v\n", requestBody.Password)
+
 		user, err := s.UserService.CreateUser(r.Context(), store.NewUser{
 			FirstName: string(requestBody.FirstName),
 			LastName:  string(requestBody.LastName),
+			Password:  (*string)(&requestBody.Password.Value),
 		})
 		if err != nil {
 			s.respondWithError(w, r, http.StatusUnprocessableEntity, err)

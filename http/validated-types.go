@@ -6,6 +6,26 @@ import (
 	"strings"
 )
 
+type optional[T any] struct {
+	Value   T
+	Present bool
+}
+
+func (o *optional[T]) UnmarshalJSON(b []byte) error {
+	var inner T
+	err := json.Unmarshal(b, &inner)
+	if err != nil {
+		return err
+	}
+
+	*o = optional[T]{
+		Value:   inner,
+		Present: true,
+	}
+
+	return nil
+}
+
 // nonEmptyString represents a string that contains at least one non-whitespace
 // character.
 type nonEmptyString string

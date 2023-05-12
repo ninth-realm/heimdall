@@ -1,7 +1,6 @@
 package http
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -25,6 +24,7 @@ func (s *Server) handleUsersCreate() http.HandlerFunc {
 	type request struct {
 		FirstName nonEmptyString           `json:"firstName"`
 		LastName  nonEmptyString           `json:"lastName"`
+		Email     emailString              `json:"email"`
 		Password  optional[nonEmptyString] `json:"password"`
 	}
 
@@ -36,11 +36,10 @@ func (s *Server) handleUsersCreate() http.HandlerFunc {
 			return
 		}
 
-		fmt.Printf("%+v\n", requestBody.Password)
-
 		user, err := s.UserService.CreateUser(r.Context(), store.NewUser{
 			FirstName: string(requestBody.FirstName),
 			LastName:  string(requestBody.LastName),
+			Email:     string(requestBody.Email),
 			Password:  (*string)(&requestBody.Password.Value),
 		})
 		if err != nil {

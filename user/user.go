@@ -30,6 +30,17 @@ func (s Service) CreateUser(ctx context.Context, user store.NewUser) (store.User
 			return store.User{}, err
 		}
 
+		_, err = s.Repo.InsertEmail(
+			store.NewEmail{
+				UserID: id,
+				Email:  user.Email,
+			},
+			store.QueryOptions{Ctx: ctx, Txn: txn},
+		)
+		if err != nil {
+			return store.User{}, err
+		}
+
 		if user.Password != nil {
 			hash, err := crypto.GetPasswordHash(*user.Password, crypto.DefaultParams)
 			if err != nil {

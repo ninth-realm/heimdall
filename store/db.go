@@ -10,6 +10,7 @@ type Repository interface {
 	TxBeginner
 	UserRepository
 	PasswordRepository
+	EmailRepository
 }
 
 type TxBeginner interface {

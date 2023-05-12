@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"net/mail"
 	"reflect"
 	"strings"
 )
@@ -22,6 +23,26 @@ func (o *optional[T]) UnmarshalJSON(b []byte) error {
 		Value:   inner,
 		Present: true,
 	}
+
+	return nil
+}
+
+type emailString string
+
+func (s *emailString) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = mail.ParseAddress(str)
+	if err != nil {
+		return &json.UnmarshalTypeError{Value: string(b), Type: reflect.TypeOf(*s)}
+	}
+
+	*s = emailString(str)
 
 	return nil
 }

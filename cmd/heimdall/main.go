@@ -6,12 +6,15 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gofrs/uuid/v5"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/mattmeyers/level"
 	"github.com/ninth-realm/heimdall/http"
+	"github.com/ninth-realm/heimdall/store"
 	"github.com/ninth-realm/heimdall/store/sqlite"
+	"github.com/ninth-realm/heimdall/user"
 	_ "modernc.org/sqlite"
 )
 
@@ -48,12 +51,11 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	db.UUIDGenerator = uuidV4Fn(uuid.NewV4)
 
 	logger.Info("Using DB driver: %s", flags.storeDriver)
 
-	_ = db
-
-	return buildServer().ListenAndServe(fmt.Sprintf(":%d", flags.port))
+	return buildServer(db).ListenAndServe(fmt.Sprintf(":%d", flags.port))
 }
 
 type flags struct {
@@ -76,9 +78,10 @@ func initFlags() flags {
 	return fs
 }
 
-func buildServer() *http.Server {
+func buildServer(db store.Repository) *http.Server {
 	srv := http.NewServer()
 	srv.Logger, _ = level.NewBasicLogger(level.Info, nil)
+	srv.UserService = user.Service{Repo: db}
 
 	return srv
 }
@@ -109,4 +112,15 @@ func getSqliteDB(dsn string, runMigrations bool) (sqlite.DB, error) {
 	}
 
 	return db, nil
+}
+
+type uuidV4Fn func() (uuid.UUID, error)
+
+func (f uuidV4Fn) GenerateUUID() uuid.UUID {
+	id, err := f()
+	if err != nil {
+		panic(err)
+	}
+
+	return id
 }

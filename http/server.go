@@ -20,6 +20,7 @@ type Server struct {
 	Router chi.Router
 
 	UserService UserService
+	AuthService AuthService
 }
 
 type UserService interface {
@@ -28,6 +29,10 @@ type UserService interface {
 	CreateUser(ctx context.Context, user store.NewUser) (store.User, error)
 	UpdateUser(ctx context.Context, id uuid.UUID, patch store.UserPatch) (store.User, error)
 	DeleteUser(ctx context.Context, id uuid.UUID) error
+}
+
+type AuthService interface {
+	Login(ctx context.Context, username, password string) (string, error)
 }
 
 // NewServer builds a new server object with the default middleware and router

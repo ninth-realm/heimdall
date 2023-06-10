@@ -11,6 +11,7 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/mattmeyers/level"
+	"github.com/ninth-realm/heimdall/auth"
 	"github.com/ninth-realm/heimdall/http"
 	"github.com/ninth-realm/heimdall/store"
 	"github.com/ninth-realm/heimdall/store/sqlite"
@@ -82,6 +83,7 @@ func buildServer(db store.Repository) *http.Server {
 	srv := http.NewServer()
 	srv.Logger, _ = level.NewBasicLogger(level.Info, nil)
 	srv.UserService = user.Service{Repo: db}
+	srv.AuthService = auth.Service{Repo: db}
 
 	return srv
 }

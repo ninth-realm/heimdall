@@ -51,6 +51,32 @@ func (db DB) GetUserById(id uuid.UUID, opts store.QueryOptions) (store.User, err
 	return user, nil
 }
 
+func (db DB) GetUserByEmail(email string, opts store.QueryOptions) (store.User, error) {
+	const query = `
+		SELECT
+			u.id,
+			u.first_name,
+			u.last_name,
+			u.created_at,
+			u.updated_at
+		FROM
+			` + "`user` u" + `
+		INNER JOIN email e ON
+			u.id = e.user_id
+		WHERE
+			e.email = ?
+	`
+
+	var user store.User
+	err := db.querier(opts.Txn).GetContext(opts.Context(), &user, query, email)
+
+	if err != nil {
+		return store.User{}, err
+	}
+
+	return user, nil
+}
+
 func (db DB) InsertUser(user store.NewUser, opts store.QueryOptions) (uuid.UUID, error) {
 	const query = `
 		INSERT INTO` + "`user`" + `

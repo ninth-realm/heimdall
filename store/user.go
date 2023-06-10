@@ -42,6 +42,7 @@ func (p UserPatch) ApplyTo(user User) User {
 type UserRepository interface {
 	ListUsers(opts QueryOptions) ([]User, error)
 	GetUserById(id uuid.UUID, opts QueryOptions) (User, error)
+	GetUserByEmail(email string, opts QueryOptions) (User, error)
 	InsertUser(user NewUser, opts QueryOptions) (uuid.UUID, error)
 	SaveUser(user User, opts QueryOptions) error
 	DeleteUser(id uuid.UUID, opts QueryOptions) error

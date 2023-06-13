@@ -12,6 +12,8 @@ servers:
 tags:
   - name: Users
     description: Manage users
+  - name: Auth
+    description: Authentication stuff
 
 paths:
   /users:
@@ -133,6 +135,52 @@ paths:
         '204':
           description: User deleted
 
+  /auth/login:
+    post:
+      summary: Retrieve an access token
+      operationId: authLogin
+      tags: [Auth]
+      requestBody:
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [username, password]
+                properties:
+                  username:
+                    type: string
+                    minLength: 1
+                    example: test@test.com
+                  password:
+                    type: string
+                    minLength: 1
+                    example: password123!
+      responses:
+        '200':
+          description: Successfully logged in
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    $ref: '#/components/schemas/Token'
+        '401':
+          description: Invalid login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    enum: [401]
+                    example: 401
+                  error:
+                    type: string
+                    example: invalid password
+
 components:
   schemas:
     User:
@@ -157,3 +205,18 @@ components:
       type: string
       format: uuid
       example: 00000000-0000-0000-0000-000000000000
+
+    Token:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: |
+            A valid JWT that can be used to authenticate with Heimdall.
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJoZWltZGFsbCIsImV4cCI6MTY4NjYyMjcwNiwiaWF0IjoxNjg2NjIxODA2fQ._pAF3OTV-Aa5ADtOATSvbUSytmLYVNrvZ_vXzKddY2Y
+        lifespan:
+          type: integer
+          minimum: 0
+          description: |
+            The number of seconds until the access token expires.
+          example: 900

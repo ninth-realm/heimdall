@@ -83,7 +83,15 @@ func buildServer(db store.Repository) *http.Server {
 	srv := http.NewServer()
 	srv.Logger, _ = level.NewBasicLogger(level.Info, nil)
 	srv.UserService = user.Service{Repo: db}
-	srv.AuthService = auth.Service{Repo: db}
+	srv.AuthService = auth.Service{
+		Repo: db,
+		JWTSettings: auth.JWTSettings{
+			Issuer:     "heimdall",
+			Lifespan:   900,
+			SigningKey: "so-secret-wow",
+			Algorithm:  auth.HMAC256Algorithm,
+		},
+	}
 
 	return srv
 }

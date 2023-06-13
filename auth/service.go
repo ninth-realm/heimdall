@@ -10,6 +10,8 @@ import (
 
 type Service struct {
 	Repo store.Repository
+
+	JWTSettings JWTSettings
 }
 
 func (s Service) Login(ctx context.Context, username, password string) (string, error) {
@@ -30,12 +32,7 @@ func (s Service) Login(ctx context.Context, username, password string) (string, 
 		return "", errors.New("incorrect password")
 	}
 
-	token, err := generateJWT(JWTSettings{
-		Issuer:     "heimdall",
-		Lifespan:   900,
-		SigningKey: "so-secret-wow",
-		Algorithm:  HMAC256Algorithm,
-	})
+	token, err := generateJWT(s.JWTSettings)
 	if err != nil {
 		return "", err
 	}

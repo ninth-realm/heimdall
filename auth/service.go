@@ -14,28 +14,28 @@ type Service struct {
 	JWTSettings JWTSettings
 }
 
-func (s Service) Login(ctx context.Context, username, password string) (string, error) {
+func (s Service) Login(ctx context.Context, username, password string) (Token, error) {
 	user, err := s.Repo.GetUserByEmail(username, store.QueryOptions{Ctx: ctx})
 	if err != nil {
-		return "", err
+		return Token{}, err
 	}
 
 	hash, err := s.Repo.GetUserPasswordHash(user.ID, store.QueryOptions{Ctx: ctx})
 	if err != nil {
-		return "", err
+		return Token{}, err
 	}
 
 	correctPassword, err := crypto.ValidatePassword(password, hash)
 	if err != nil {
-		return "", err
+		return Token{}, err
 	} else if !correctPassword {
-		return "", errors.New("incorrect password")
+		return Token{}, errors.New("incorrect password")
 	}
 
 	token, err := generateJWT(s.JWTSettings)
 	if err != nil {
-		return "", err
+		return Token{}, err
 	}
 
-	return token.AccessToken, nil
+	return token, nil
 }

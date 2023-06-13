@@ -10,8 +10,8 @@ import (
 
 // Token holds the information required for transmitting the JWT to the client.
 type Token struct {
-	AccessToken string
-	Lifespan    int
+	AccessToken string `json:"accessToken"`
+	Lifespan    int    `json:"lifespan"`
 }
 
 type signingAlgorithm string

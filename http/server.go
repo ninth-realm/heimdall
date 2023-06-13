@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gofrs/uuid/v5"
 	"github.com/mattmeyers/level"
+	"github.com/ninth-realm/heimdall/auth"
 	"github.com/ninth-realm/heimdall/store"
 )
 
@@ -32,7 +33,7 @@ type UserService interface {
 }
 
 type AuthService interface {
-	Login(ctx context.Context, username, password string) (string, error)
+	Login(ctx context.Context, username, password string) (auth.Token, error)
 }
 
 // NewServer builds a new server object with the default middleware and router

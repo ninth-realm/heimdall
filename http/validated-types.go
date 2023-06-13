@@ -51,6 +51,8 @@ func (s *emailString) UnmarshalJSON(b []byte) error {
 // character.
 type nonEmptyString string
 
+func (s nonEmptyString) toString() string { return string(s) }
+
 func (s *nonEmptyString) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)

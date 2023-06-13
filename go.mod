@@ -7,6 +7,7 @@ require github.com/go-chi/chi/v5 v5.0.8
 require (
 	github.com/gofrs/uuid/v5 v5.0.0
 	github.com/golang-migrate/migrate/v4 v4.15.2
+	github.com/google/go-cmp v0.5.9
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/mattmeyers/level v0.2.0
 	golang.org/x/crypto v0.9.0
@@ -15,6 +16,7 @@ require (
 
 require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect

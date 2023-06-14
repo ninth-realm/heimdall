@@ -135,6 +135,116 @@ paths:
         '204':
           description: User deleted
 
+  /clients:
+    get:
+      summary: Returns a list of clients
+      operationId: getClients
+      tags: [Clients]
+      responses:
+        '200':
+          description: A list of clients
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Client'
+
+    post:
+      summary: Create a new client
+      operationId: postClients
+      tags: [Clients]
+      requestBody:
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [name, enabled]
+                properties:
+                  name:
+                    type: string
+                    minLength: 1
+                    example: Bifrost
+                  enabled:
+                    type: boolean
+                    example: true
+      responses:
+        '201':
+          description: The new client
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    $ref: '#/components/schemas/Client'
+
+  /clients/{clientId}:
+    parameters:
+      - name: clientId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/ClientId'
+
+    get:
+      summary: Returns a client
+      operationId: getClientById
+      tags: [Clients]
+      responses:
+        '200':
+          description: A client
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    $ref: '#/components/schemas/Client'
+
+    patch:
+      summary: Update a client
+      operationId: patchClientById
+      tags: [Clients]
+      requestBody:
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  name:
+                    type: string
+                    minLength: 1
+                    example: Bifrost
+                  enabled:
+                    type: boolean
+                    example: true
+      responses:
+        '200':
+          description: The updated client
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    $ref: '#/components/schemas/Client'
+
+    delete:
+      summary: Delete a client
+      operationId: deleteClientById
+      tags: [Clients]
+      responses:
+        '204':
+          description: Client deleted
+
   /auth/login:
     post:
       summary: Retrieve an access token
@@ -200,6 +310,10 @@ components:
           type: string
           format: email
           example: john.doe@example.com
+        createdAt:
+          $ref: '#/components/schemas/DateTime'
+        updatedAt:
+          $ref: '#/components/schemas/DateTime'
 
     UserId:
       type: string
@@ -220,3 +334,30 @@ components:
           description: |
             The number of seconds until the access token expires.
           example: 900
+
+    Client:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/ClientId'
+        name:
+          type: string
+          minLength: 1
+          example: Bifrost
+        enabled:
+          type: boolean
+          example: true
+        createdAt:
+          $ref: '#/components/schemas/DateTime'
+        updatedAt:
+          $ref: '#/components/schemas/DateTime'
+
+    ClientId:
+      type: string
+      format: uuid
+      example: 00000000-0000-0000-0000-000000000000
+
+    DateTime:
+      type: string
+      format: date-time
+      example: 2023-01-01T00:00:00Z

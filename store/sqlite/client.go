@@ -122,3 +122,28 @@ func (db DB) DeleteClient(id uuid.UUID, opts store.QueryOptions) error {
 	return nil
 
 }
+
+func (db DB) ListClientAPIKeys(clientID uuid.UUID, opts store.QueryOptions) ([]store.APIKey, error) {
+	const query = `
+		SELECT
+			id,
+			client_id,
+			description,
+			prefix,
+			hash,
+			created_at,
+			updated_at
+		FROM
+			api_key
+		WHERE
+			client_id = ?
+	`
+
+	keys := []store.APIKey{}
+	err := db.querier(opts.Txn).SelectContext(opts.Context(), &keys, query, clientID)
+	if err != nil {
+		return nil, err
+	}
+
+	return keys, nil
+}

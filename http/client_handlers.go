@@ -115,3 +115,21 @@ func (s *Server) handleClientsDelete() http.HandlerFunc {
 		s.respond(w, r, http.StatusNoContent, nil)
 	})
 }
+
+func (s *Server) handleClientsAPIKeysGet() http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id, err := uuid.FromString(chi.URLParamFromCtx(r.Context(), "clientID"))
+		if err != nil {
+			s.respondWithError(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		keys, err := s.ClientService.ListClientAPIKeys(r.Context(), id)
+		if err != nil {
+			s.respondWithError(w, r, http.StatusNotFound, err)
+			return
+		}
+
+		s.respond(w, r, http.StatusOK, keys)
+	})
+}

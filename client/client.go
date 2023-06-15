@@ -58,3 +58,7 @@ func (s Service) UpdateClient(ctx context.Context, id uuid.UUID, patch store.Cli
 func (s Service) DeleteClient(ctx context.Context, id uuid.UUID) error {
 	return s.Repo.DeleteClient(id, store.QueryOptions{Ctx: ctx})
 }
+
+func (s Service) ListClientAPIKeys(ctx context.Context, clientID uuid.UUID) ([]store.APIKey, error) {
+	return s.Repo.ListClientAPIKeys(clientID, store.QueryOptions{Ctx: ctx})
+}

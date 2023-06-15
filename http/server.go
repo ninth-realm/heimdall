@@ -39,6 +39,8 @@ type ClientService interface {
 	CreateClient(ctx context.Context, client store.NewClient) (store.Client, error)
 	UpdateClient(ctx context.Context, id uuid.UUID, patch store.ClientPatch) (store.Client, error)
 	DeleteClient(ctx context.Context, id uuid.UUID) error
+
+	ListClientAPIKeys(ctx context.Context, clientID uuid.UUID) ([]store.APIKey, error)
 }
 
 type AuthService interface {

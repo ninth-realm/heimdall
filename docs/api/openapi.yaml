@@ -14,6 +14,8 @@ tags:
     description: Manage users
   - name: Auth
     description: Authentication stuff
+  - name: Clients
+    description: Manage clients
 
 paths:
   /users:
@@ -79,7 +81,7 @@ paths:
         in: path
         required: true
         schema:
-          $ref: '#/components/schemas/UserId'
+          $ref: '#/components/schemas/Id'
 
     get:
       summary: Returns a user
@@ -190,7 +192,7 @@ paths:
         in: path
         required: true
         schema:
-          $ref: '#/components/schemas/ClientId'
+          $ref: '#/components/schemas/Id'
 
     get:
       summary: Returns a client
@@ -245,6 +247,83 @@ paths:
         '204':
           description: Client deleted
 
+  /clients/{clientId}/api-keys:
+    parameters:
+      - name: clientId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+
+    get:
+      summary: Return a client's API keys
+      operationId: getClientApiKeys
+      tags: [Clients]
+      responses:
+        '200':
+          description: A client's API keys
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApiKey'
+
+    post:
+      summary: Generate an API key
+      operationId: postClientApiKeys
+      tags: [Clients]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  nullable: true
+                  example: Bifrost key
+      responses:
+        '201':
+          description: The API key
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    type: object
+                    properties:
+                      key:
+                        $ref: '#/components/schemas/ApiKeyToken'
+
+  /clients/{clientId}/api-keys/{keyId}:
+    parameters:
+      - name: clientId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+
+      - name: keyId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+
+    delete:
+      summary: Delete and API key
+      operationId: deleteClientApiKey
+      tags: [Clients]
+      responses:
+        '204':
+          description: API key deleted
+
   /auth/login:
     post:
       summary: Retrieve an access token
@@ -297,7 +376,7 @@ components:
       type: object
       properties:
         id:
-          $ref: '#/components/schemas/UserId'
+          $ref: '#/components/schemas/Id'
         firstName:
           type: string
           minLength: 1
@@ -314,11 +393,6 @@ components:
           $ref: '#/components/schemas/DateTime'
         updatedAt:
           $ref: '#/components/schemas/DateTime'
-
-    UserId:
-      type: string
-      format: uuid
-      example: 00000000-0000-0000-0000-000000000000
 
     Token:
       type: object
@@ -339,7 +413,7 @@ components:
       type: object
       properties:
         id:
-          $ref: '#/components/schemas/ClientId'
+          $ref: '#/components/schemas/Id'
         name:
           type: string
           minLength: 1
@@ -352,10 +426,36 @@ components:
         updatedAt:
           $ref: '#/components/schemas/DateTime'
 
-    ClientId:
+    ApiKey:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        description:
+          type: string
+          nullable: true
+          example: Bifrost key
+        prefix:
+          type: string
+          description: |
+            The unhashed prefix of the key that allows a key to be identified and
+            referenced.
+          pattern: /[a-f0-9]{6}/    
+          example: 73ad03
+        createdAt:
+          $ref: '#/components/schemas/DateTime'
+        updatedAt:
+          $ref: '#/components/schemas/DateTime'
+
+    Id:
       type: string
       format: uuid
       example: 00000000-0000-0000-0000-000000000000
+
+    ApiKeyToken:
+      type: string
+      pattern: /[a-f0-9]{6}\.[a-zA-Z0-9\/=]+/
+      example: 73ad03.2MQeQnc4smT0cwAl1FRBSk20lCEkmSz5Hg4bcGEuWDo=
 
     DateTime:
       type: string

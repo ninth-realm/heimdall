@@ -47,6 +47,13 @@ type APIKey struct {
 	UpdatedAt   time.Time `json:"updatedAt" db:"updated_at"`
 }
 
+type NewAPIKey struct {
+	ClientID    uuid.UUID
+	Description *string
+	Prefix      string
+	Hash        string
+}
+
 type ClientRepository interface {
 	ListClients(opts QueryOptions) ([]Client, error)
 	GetClientById(id uuid.UUID, opts QueryOptions) (Client, error)
@@ -55,4 +62,5 @@ type ClientRepository interface {
 	DeleteClient(id uuid.UUID, opts QueryOptions) error
 
 	ListClientAPIKeys(clientID uuid.UUID, opts QueryOptions) ([]APIKey, error)
+	InsertAPIKey(key NewAPIKey, opts QueryOptions) (uuid.UUID, error)
 }

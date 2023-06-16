@@ -2,10 +2,12 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jmoiron/sqlx"
+	"github.com/ninth-realm/heimdall/crypto"
 	"github.com/ninth-realm/heimdall/store"
 )
 
@@ -61,4 +63,26 @@ func (s Service) DeleteClient(ctx context.Context, id uuid.UUID) error {
 
 func (s Service) ListClientAPIKeys(ctx context.Context, clientID uuid.UUID) ([]store.APIKey, error) {
 	return s.Repo.ListClientAPIKeys(clientID, store.QueryOptions{Ctx: ctx})
+}
+
+func (s Service) GenerateAPIKey(ctx context.Context, newKey store.NewAPIKey) (string, error) {
+	prefix, suffix, err := generateAPIKey()
+	if err != nil {
+		return "", err
+	}
+
+	hash, err := crypto.GetPasswordHash(suffix, crypto.DefaultParams)
+	if err != nil {
+		return "", err
+	}
+
+	newKey.Prefix = prefix
+	newKey.Hash = hash
+
+	_, err = s.Repo.InsertAPIKey(newKey, store.QueryOptions{Ctx: ctx})
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s.%s", prefix, suffix), nil
 }

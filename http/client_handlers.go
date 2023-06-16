@@ -133,3 +133,35 @@ func (s *Server) handleClientsAPIKeysGet() http.HandlerFunc {
 		s.respond(w, r, http.StatusOK, keys)
 	})
 }
+
+func (s *Server) handleClientsAPIKeysCreate() http.HandlerFunc {
+	type request struct {
+		Description *string `json:"description"`
+	}
+
+	type response struct {
+		Key string `json:"key"`
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id, err := uuid.FromString(chi.URLParamFromCtx(r.Context(), "clientID"))
+		if err != nil {
+			s.respondWithError(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		var body request
+		if err = s.decode(r, &body); err != nil {
+			s.respondWithError(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		keys, err := s.ClientService.GenerateAPIKey(r.Context(), store.NewAPIKey{ClientID: id, Description: body.Description})
+		if err != nil {
+			s.respondWithError(w, r, http.StatusNotFound, err)
+			return
+		}
+
+		s.respond(w, r, http.StatusOK, keys)
+	})
+}

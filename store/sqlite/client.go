@@ -147,3 +147,29 @@ func (db DB) ListClientAPIKeys(clientID uuid.UUID, opts store.QueryOptions) ([]s
 
 	return keys, nil
 }
+
+func (db DB) InsertAPIKey(key store.NewAPIKey, opts store.QueryOptions) (uuid.UUID, error) {
+	const query = `
+		INSERT INTO api_key
+			(id, client_id, description, prefix, hash)
+		VALUES
+			(?, ?, ?, ?, ?)
+	`
+
+	id := db.UUIDGenerator.GenerateUUID()
+	_, err := db.querier(opts.Txn).ExecContext(
+		opts.Context(),
+		query,
+		id,
+		key.ClientID,
+		key.Description,
+		key.Prefix,
+		key.Hash,
+	)
+
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	return id, nil
+}

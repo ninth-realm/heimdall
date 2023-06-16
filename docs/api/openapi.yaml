@@ -14,6 +14,8 @@ tags:
     description: Manage users
   - name: Auth
     description: Authentication stuff
+  - name: Clients
+    description: Manage clients
 
 paths:
   /users:
@@ -79,7 +81,7 @@ paths:
         in: path
         required: true
         schema:
-          $ref: '#/components/schemas/UserId'
+          $ref: '#/components/schemas/Id'
 
     get:
       summary: Returns a user
@@ -135,6 +137,193 @@ paths:
         '204':
           description: User deleted
 
+  /clients:
+    get:
+      summary: Returns a list of clients
+      operationId: getClients
+      tags: [Clients]
+      responses:
+        '200':
+          description: A list of clients
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Client'
+
+    post:
+      summary: Create a new client
+      operationId: postClients
+      tags: [Clients]
+      requestBody:
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [name, enabled]
+                properties:
+                  name:
+                    type: string
+                    minLength: 1
+                    example: Bifrost
+                  enabled:
+                    type: boolean
+                    example: true
+      responses:
+        '201':
+          description: The new client
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    $ref: '#/components/schemas/Client'
+
+  /clients/{clientId}:
+    parameters:
+      - name: clientId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+
+    get:
+      summary: Returns a client
+      operationId: getClientById
+      tags: [Clients]
+      responses:
+        '200':
+          description: A client
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    $ref: '#/components/schemas/Client'
+
+    patch:
+      summary: Update a client
+      operationId: patchClientById
+      tags: [Clients]
+      requestBody:
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  name:
+                    type: string
+                    minLength: 1
+                    example: Bifrost
+                  enabled:
+                    type: boolean
+                    example: true
+      responses:
+        '200':
+          description: The updated client
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    $ref: '#/components/schemas/Client'
+
+    delete:
+      summary: Delete a client
+      operationId: deleteClientById
+      tags: [Clients]
+      responses:
+        '204':
+          description: Client deleted
+
+  /clients/{clientId}/api-keys:
+    parameters:
+      - name: clientId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+
+    get:
+      summary: Return a client's API keys
+      operationId: getClientApiKeys
+      tags: [Clients]
+      responses:
+        '200':
+          description: A client's API keys
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApiKey'
+
+    post:
+      summary: Generate an API key
+      operationId: postClientApiKeys
+      tags: [Clients]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  nullable: true
+                  example: Bifrost key
+      responses:
+        '201':
+          description: The API key
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    type: object
+                    properties:
+                      key:
+                        $ref: '#/components/schemas/ApiKeyToken'
+
+  /clients/{clientId}/api-keys/{keyId}:
+    parameters:
+      - name: clientId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+
+      - name: keyId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+
+    delete:
+      summary: Delete and API key
+      operationId: deleteClientApiKey
+      tags: [Clients]
+      responses:
+        '204':
+          description: API key deleted
+
   /auth/login:
     post:
       summary: Retrieve an access token
@@ -187,7 +376,7 @@ components:
       type: object
       properties:
         id:
-          $ref: '#/components/schemas/UserId'
+          $ref: '#/components/schemas/Id'
         firstName:
           type: string
           minLength: 1
@@ -200,11 +389,10 @@ components:
           type: string
           format: email
           example: john.doe@example.com
-
-    UserId:
-      type: string
-      format: uuid
-      example: 00000000-0000-0000-0000-000000000000
+        createdAt:
+          $ref: '#/components/schemas/DateTime'
+        updatedAt:
+          $ref: '#/components/schemas/DateTime'
 
     Token:
       type: object
@@ -220,3 +408,56 @@ components:
           description: |
             The number of seconds until the access token expires.
           example: 900
+
+    Client:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        name:
+          type: string
+          minLength: 1
+          example: Bifrost
+        enabled:
+          type: boolean
+          example: true
+        createdAt:
+          $ref: '#/components/schemas/DateTime'
+        updatedAt:
+          $ref: '#/components/schemas/DateTime'
+
+    ApiKey:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        description:
+          type: string
+          nullable: true
+          example: Bifrost key
+        prefix:
+          type: string
+          description: |
+            The unhashed prefix of the key that allows a key to be identified and
+            referenced.
+          pattern: /[a-f0-9]{6}/    
+          example: 73ad03
+        createdAt:
+          $ref: '#/components/schemas/DateTime'
+        updatedAt:
+          $ref: '#/components/schemas/DateTime'
+
+    Id:
+      type: string
+      format: uuid
+      example: 00000000-0000-0000-0000-000000000000
+
+    ApiKeyToken:
+      type: string
+      pattern: /[a-f0-9]{6}\.[a-zA-Z0-9\/=]+/
+      example: 73ad03.2MQeQnc4smT0cwAl1FRBSk20lCEkmSz5Hg4bcGEuWDo=
+
+    DateTime:
+      type: string
+      format: date-time
+      example: 2023-01-01T00:00:00Z

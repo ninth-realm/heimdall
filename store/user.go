@@ -8,11 +8,11 @@ import (
 )
 
 type User struct {
-	ID        uuid.UUID `db:"id"`
-	FirstName string    `db:"first_name"`
-	LastName  string    `db:"last_name"`
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+	ID        uuid.UUID `json:"id" db:"id"`
+	FirstName string    `json:"firstName" db:"first_name"`
+	LastName  string    `json:"lastName" db:"last_name"`
+	CreatedAt time.Time `json:"createdAt" db:"created_at"`
+	UpdatedAt time.Time `json:"updatedAt" db:"updated_at"`
 }
 
 type NewUser struct {

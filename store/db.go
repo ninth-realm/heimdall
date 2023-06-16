@@ -12,6 +12,7 @@ type Repository interface {
 	PasswordRepository
 	EmailRepository
 	AuthRepository
+	ClientRepository
 }
 
 type TxBeginner interface {

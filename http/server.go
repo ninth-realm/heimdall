@@ -20,8 +20,9 @@ type Server struct {
 	Logger level.Logger
 	Router chi.Router
 
-	UserService UserService
-	AuthService AuthService
+	UserService   UserService
+	ClientService ClientService
+	AuthService   AuthService
 }
 
 type UserService interface {
@@ -30,6 +31,18 @@ type UserService interface {
 	CreateUser(ctx context.Context, user store.NewUser) (store.User, error)
 	UpdateUser(ctx context.Context, id uuid.UUID, patch store.UserPatch) (store.User, error)
 	DeleteUser(ctx context.Context, id uuid.UUID) error
+}
+
+type ClientService interface {
+	ListClients(ctx context.Context) ([]store.Client, error)
+	GetClient(ctx context.Context, id uuid.UUID) (store.Client, error)
+	CreateClient(ctx context.Context, client store.NewClient) (store.Client, error)
+	UpdateClient(ctx context.Context, id uuid.UUID, patch store.ClientPatch) (store.Client, error)
+	DeleteClient(ctx context.Context, id uuid.UUID) error
+
+	ListClientAPIKeys(ctx context.Context, clientID uuid.UUID) ([]store.APIKey, error)
+	GenerateAPIKey(ctx context.Context, newKey store.NewAPIKey) (string, error)
+	DeleteClientAPIKey(ctx context.Context, clientID, keyID uuid.UUID) error
 }
 
 type AuthService interface {

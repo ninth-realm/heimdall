@@ -1,0 +1,15 @@
+CREATE TABLE `client` (
+    `id` TEXT PRIMARY KEY NOT NULL,
+    `name` TEXT NOT NULL UNIQUE,
+    `enabled` BOOLEAN NOT NULL DEFAULT 1,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER [update_client_timestamp]
+    AFTER UPDATE
+    ON `client`
+    FOR EACH ROW
+BEGIN
+    UPDATE `client` SET updated_at = CURRENT_TIMESTAMP WHERE id = old.id;
+END;

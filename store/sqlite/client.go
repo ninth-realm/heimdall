@@ -173,3 +173,25 @@ func (db DB) InsertAPIKey(key store.NewAPIKey, opts store.QueryOptions) (uuid.UU
 
 	return id, nil
 }
+
+func (db DB) DeleteClientAPIKey(clientID, keyID uuid.UUID, opts store.QueryOptions) error {
+	const query = `
+		DELETE FROM api_key
+		WHERE
+			id = ?
+			AND client_id = ?
+	`
+
+	res, err := db.querier(opts.Txn).ExecContext(opts.Ctx, query, keyID, clientID)
+	if err != nil {
+		return err
+	}
+
+	if n, err := res.RowsAffected(); n == 0 {
+		return errors.New("API key not found")
+	} else if err != nil {
+		return err
+	}
+
+	return nil
+}

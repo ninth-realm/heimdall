@@ -42,6 +42,7 @@ type ClientService interface {
 
 	ListClientAPIKeys(ctx context.Context, clientID uuid.UUID) ([]store.APIKey, error)
 	GenerateAPIKey(ctx context.Context, newKey store.NewAPIKey) (string, error)
+	DeleteClientAPIKey(ctx context.Context, clientID, keyID uuid.UUID) error
 }
 
 type AuthService interface {

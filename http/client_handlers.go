@@ -156,12 +156,36 @@ func (s *Server) handleClientsAPIKeysCreate() http.HandlerFunc {
 			return
 		}
 
-		keys, err := s.ClientService.GenerateAPIKey(r.Context(), store.NewAPIKey{ClientID: id, Description: body.Description})
+		key, err := s.ClientService.GenerateAPIKey(r.Context(), store.NewAPIKey{ClientID: id, Description: body.Description})
 		if err != nil {
 			s.respondWithError(w, r, http.StatusNotFound, err)
 			return
 		}
 
-		s.respond(w, r, http.StatusOK, keys)
+		s.respond(w, r, http.StatusOK, response{Key: key})
+	})
+}
+
+func (s *Server) handleClientsAPIKeysDelete() http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		clientID, err := uuid.FromString(chi.URLParamFromCtx(r.Context(), "clientID"))
+		if err != nil {
+			s.respondWithError(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		keyID, err := uuid.FromString(chi.URLParamFromCtx(r.Context(), "keyID"))
+		if err != nil {
+			s.respondWithError(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		err = s.ClientService.DeleteClientAPIKey(r.Context(), clientID, keyID)
+		if err != nil {
+			s.respondWithError(w, r, http.StatusNotFound, err)
+			return
+		}
+
+		s.respond(w, r, http.StatusNoContent, nil)
 	})
 }

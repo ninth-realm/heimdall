@@ -86,3 +86,7 @@ func (s Service) GenerateAPIKey(ctx context.Context, newKey store.NewAPIKey) (st
 
 	return fmt.Sprintf("%s.%s", prefix, suffix), nil
 }
+
+func (s Service) DeleteClientAPIKey(ctx context.Context, clientID, keyID uuid.UUID) error {
+	return s.Repo.DeleteClientAPIKey(clientID, keyID, store.QueryOptions{Ctx: ctx})
+}

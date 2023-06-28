@@ -2,6 +2,9 @@ package auth
 
 import (
 	"testing"
+
+	"github.com/gofrs/uuid/v5"
+	"github.com/ninth-realm/heimdall/store"
 )
 
 func TestJWTSettings_validate(t *testing.T) {
@@ -81,12 +84,16 @@ func TestJWTSettings_validate(t *testing.T) {
 func Test_generateJWT(t *testing.T) {
 	tests := []struct {
 		name     string
+		user     store.User
 		settings JWTSettings
 		want     Token
 		wantErr  bool
 	}{
 		{
 			name: "Success",
+			user: store.User{
+				ID: uuid.Nil,
+			},
 			settings: JWTSettings{
 				Issuer:     "Heimdall",
 				Lifespan:   60,
@@ -99,7 +106,10 @@ func Test_generateJWT(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:     "Invalid settings returns error",
+			name: "Invalid settings returns error",
+			user: store.User{
+				ID: uuid.Nil,
+			},
 			settings: JWTSettings{},
 			want:     Token{},
 			wantErr:  true,
@@ -107,7 +117,7 @@ func Test_generateJWT(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := generateJWT(tt.settings)
+			got, err := generateJWT(tt.user, tt.settings)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("generateJWT() error = %v, wantErr %v", err, tt.wantErr)
 				return

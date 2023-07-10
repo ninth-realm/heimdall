@@ -123,6 +123,32 @@ func (db DB) DeleteClient(id uuid.UUID, opts store.QueryOptions) error {
 
 }
 
+func (db DB) GetClientAPIKey(clientID uuid.UUID, prefix string, opts store.QueryOptions) (store.APIKey, error) {
+	const query = `
+		SELECT
+			id,
+			client_id,
+			description,
+			prefix,
+			hash,
+			created_at,
+			updated_at
+		FROM
+			api_key
+		WHERE
+			client_id = ?
+			AND prefix = ?
+	`
+
+	var key store.APIKey
+	err := db.querier(opts.Txn).GetContext(opts.Context(), &key, query, clientID, prefix)
+	if err != nil {
+		return store.APIKey{}, err
+	}
+
+	return key, nil
+}
+
 func (db DB) ListClientAPIKeys(clientID uuid.UUID, opts store.QueryOptions) ([]store.APIKey, error) {
 	const query = `
 		SELECT

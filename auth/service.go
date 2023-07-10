@@ -3,8 +3,10 @@ package auth
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
+	"github.com/gofrs/uuid/v5"
 	"github.com/jmoiron/sqlx"
 	"github.com/ninth-realm/heimdall/crypto"
 	"github.com/ninth-realm/heimdall/store"
@@ -73,4 +75,35 @@ func (s Service) IntrospectToken(ctx context.Context, token string) (TokenInfo, 
 			UserID:    session.UserId.String(),
 		}, nil
 	})
+}
+
+func (s Service) ValidateAPIKey(ctx context.Context, key string) error {
+	clientIDStr, token, found := strings.Cut(key, ":")
+	if !found {
+		return errors.New("malformed API key")
+	}
+
+	clientID, err := uuid.FromString(clientIDStr)
+	if !found {
+		return errors.New("invalid client ID")
+	}
+
+	prefix, suffix, found := strings.Cut(token, ".")
+	if !found {
+		return errors.New("malformed API key")
+	}
+
+	k, err := s.Repo.GetClientAPIKey(clientID, prefix, store.QueryOptions{Ctx: ctx})
+	if err != nil {
+		return err
+	}
+
+	ok, err := crypto.ValidatePassword(suffix, k.Hash)
+	if err != nil {
+		return err
+	} else if !ok {
+		return errors.New("invalid API key")
+	}
+
+	return nil
 }

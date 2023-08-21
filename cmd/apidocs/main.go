@@ -19,7 +19,7 @@ func main() {
 	)
 	http.Handle("/", http.FileServer(http.FS(index)))
 
-	if err := http.ListenAndServe(":8081", nil); err != nil {
+	if err := http.ListenAndServe(":8082", nil); err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}

@@ -370,6 +370,62 @@ paths:
                     type: string
                     example: invalid password
 
+  /auth/introspect:
+    post:
+      summary: Retrieve info about a session
+      operationId: authIntrospect
+      tags: [Auth]
+      requestBody:
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [token]
+                properties:
+                  token:
+                    type: string
+                    example: zkLD9L/c6y8Z1GyyKt+Wka8EUIVmAdxnM/hDs8yzQco=
+                    minLength: 1
+      responses:
+        '200':
+          description: Successful introspection
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    $ref: '#/components/schemas/TokenInfo'
+        '400':
+          description: Invalid session token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    enum: [400]
+                    example: 400
+                  error:
+                    type: string
+                    example: invalid password
+        '401':
+          description: Invalid auth token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    enum: [401]
+                    example: 401
+                  error:
+                    type: string
+                    example: invalid password
+
 components:
   schemas:
     User:
@@ -400,9 +456,27 @@ components:
         accessToken:
           type: string
           description: |
-            A valid JWT that can be used to authenticate with Heimdall.
-          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJoZWltZGFsbCIsImV4cCI6MTY4NjYyMjcwNiwiaWF0IjoxNjg2NjIxODA2fQ._pAF3OTV-Aa5ADtOATSvbUSytmLYVNrvZ_vXzKddY2Y
+            A session token that can be used to authenticate with Heimdall.
+          example: zkLD9L/c6y8Z1GyyKt+Wka8EUIVmAdxnM/hDs8yzQco=
         lifespan:
+          type: integer
+          minimum: 0
+          description: |
+            The number of seconds until the access token expires.
+          example: 900
+
+    TokenInfo:
+      type: object
+      properties:
+        active:
+          type: boolean
+          description: If the session is currently active.
+        sub:
+          type: string
+          description: |
+            The UUID of the user who owns the session.
+          example: 8851294f-1232-43b5-b605-0040479d5373
+        exp:
           type: integer
           minimum: 0
           description: |

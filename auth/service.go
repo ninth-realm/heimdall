@@ -3,8 +3,9 @@ package auth
 import (
 	"context"
 	"errors"
+	"time"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/jmoiron/sqlx"
 	"github.com/ninth-realm/heimdall/crypto"
 	"github.com/ninth-realm/heimdall/store"
 )
@@ -16,42 +17,60 @@ type Service struct {
 }
 
 func (s Service) Login(ctx context.Context, username, password string) (Token, error) {
-	user, err := s.Repo.GetUserByEmail(username, store.QueryOptions{Ctx: ctx})
-	if err != nil {
-		return Token{}, err
-	}
+	return store.RunUnitOfWork(ctx, s.Repo, func(tx *sqlx.Tx) (Token, error) {
+		opts := store.QueryOptions{Ctx: ctx, Txn: tx}
 
-	hash, err := s.Repo.GetUserPasswordHash(user.ID, store.QueryOptions{Ctx: ctx})
-	if err != nil {
-		return Token{}, err
-	}
+		user, err := s.Repo.GetUserByEmail(username, opts)
+		if err != nil {
+			return Token{}, err
+		}
 
-	correctPassword, err := crypto.ValidatePassword(password, hash)
-	if err != nil {
-		return Token{}, err
-	} else if !correctPassword {
-		return Token{}, errors.New("incorrect password")
-	}
+		hash, err := s.Repo.GetUserPasswordHash(user.ID, opts)
+		if err != nil {
+			return Token{}, err
+		}
 
-	token, err := generateJWT(user, s.JWTSettings)
-	if err != nil {
-		return Token{}, err
-	}
+		correctPassword, err := crypto.ValidatePassword(password, hash)
+		if err != nil {
+			return Token{}, err
+		} else if !correctPassword {
+			return Token{}, errors.New("incorrect password")
+		}
 
-	return token, nil
+		token, err := crypto.GenerateRandBase64String(32)
+		if err != nil {
+			return Token{}, err
+		}
+
+		now := time.Now()
+		lifespan := 24 * time.Hour
+		err = s.Repo.SaveSession(store.Session{
+			Token:     token,
+			UserId:    user.ID,
+			CreatedAt: now,
+			ExpiresAt: now.Add(lifespan),
+		}, opts)
+		if err != nil {
+			return Token{}, err
+		}
+
+		return Token{AccessToken: token, Lifespan: int(lifespan.Seconds())}, nil
+	})
 }
 
 func (s Service) IntrospectToken(ctx context.Context, token string) (TokenInfo, error) {
-	t, err := validateJWT(token, s.JWTSettings)
-	if err != nil {
-		return TokenInfo{}, err
-	}
+	return store.RunUnitOfWork(ctx, s.Repo, func(tx *sqlx.Tx) (TokenInfo, error) {
+		opts := store.QueryOptions{Ctx: ctx, Txn: tx}
 
-	claims := t.Claims.(jwt.MapClaims)
+		session, err := s.Repo.GetSession(token, opts)
+		if err != nil {
+			return TokenInfo{}, err
+		}
 
-	return TokenInfo{
-		Active:    true,
-		ExpiresAt: int(claims["exp"].(float64)),
-		UserID:    claims["sub"].(string),
-	}, nil
+		return TokenInfo{
+			Active:    true,
+			ExpiresAt: int(session.ExpiresAt.Sub(session.CreatedAt).Seconds()),
+			UserID:    session.UserId.String(),
+		}, nil
+	})
 }

@@ -40,7 +40,7 @@ func (s *Server) handleAuthLogin() http.HandlerFunc {
 			MaxAge:   token.Lifespan,
 		})
 
-		s.respond(w, r, http.StatusOK, token)
+		s.respond(w, r, http.StatusNoContent, nil)
 	})
 }
 

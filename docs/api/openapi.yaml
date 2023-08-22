@@ -10,10 +10,10 @@ servers:
     description: Development server
 
 tags:
+  - name: Auth
+    description: Session management
   - name: Users
     description: Manage users
-  - name: Auth
-    description: Authentication stuff
   - name: Clients
     description: Manage clients
 
@@ -351,7 +351,7 @@ paths:
                     minLength: 1
                     example: password123!
       responses:
-        '200':
+        '204':
           description: >
             Successfully authenticated.
             The session ID is returned in a cookie named `heimdall_sessionToken`.
@@ -361,14 +361,6 @@ paths:
               schema: 
                 type: string
                 example: heimdall_sessionToken=XdMIzEPHxFcFyVGnzpUkHLZZP0/VEftTqI/+9CaarhE=; Path=/; Max-Age=86400; HttpOnly; Secure; SameSite=Lax
-          content:
-            application/json:
-              schema: 
-                type: object
-                required: [response]
-                properties:
-                  response:
-                    $ref: '#/components/schemas/Token'
         '401':
           description: Invalid login
           content:
@@ -496,21 +488,6 @@ components:
           $ref: '#/components/schemas/DateTime'
         updatedAt:
           $ref: '#/components/schemas/DateTime'
-
-    Token:
-      type: object
-      properties:
-        accessToken:
-          type: string
-          description: |
-            A session token that can be used to authenticate with Heimdall.
-          example: zkLD9L/c6y8Z1GyyKt+Wka8EUIVmAdxnM/hDs8yzQco=
-        lifespan:
-          type: integer
-          minimum: 0
-          description: |
-            The number of seconds until the access token expires.
-          example: 900
 
     TokenInfo:
       type: object

@@ -17,5 +17,6 @@ func (s *Server) loadRoutes() {
 	s.Router.With(s.authenticateRoute).Delete("/api/v1/clients/{clientID}/api-keys/{keyID}", s.handleClientsAPIKeysDelete())
 
 	s.Router.Post("/api/v1/auth/login", s.handleAuthLogin())
+	s.Router.Post("/api/v1/auth/logout", s.handleAuthLogout())
 	s.Router.With(s.authenticateRoute).Post("/api/v1/auth/introspect", s.handleAuthIntrospect())
 }

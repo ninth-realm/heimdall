@@ -16,4 +16,5 @@ type Session struct {
 type SessionRepository interface {
 	GetSession(token string, opts QueryOptions) (Session, error)
 	SaveSession(session Session, opts QueryOptions) error
+	DeleteSession(token string, opts QueryOptions) error
 }

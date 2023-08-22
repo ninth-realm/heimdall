@@ -60,6 +60,17 @@ func (s Service) Login(ctx context.Context, username, password string) (Token, e
 	})
 }
 
+func (s Service) Logout(ctx context.Context, token string) error {
+	err := s.Repo.DeleteSession(token, store.QueryOptions{Ctx: ctx})
+	// When logging out, we don't care about missing session errors. If the
+	// session doesn't exist, then there's just nothing to do.
+	if !errors.Is(err, store.NotFoundError{}) {
+		return err
+	}
+
+	return nil
+}
+
 func (s Service) IntrospectToken(ctx context.Context, token string) (TokenInfo, error) {
 	return store.RunUnitOfWork(ctx, s.Repo, func(tx *sqlx.Tx) (TokenInfo, error) {
 		opts := store.QueryOptions{Ctx: ctx, Txn: tx}
@@ -71,7 +82,7 @@ func (s Service) IntrospectToken(ctx context.Context, token string) (TokenInfo, 
 
 		return TokenInfo{
 			Active:    true,
-			ExpiresAt: int(session.ExpiresAt.Sub(session.CreatedAt).Seconds()),
+			ExpiresAt: int(session.ExpiresAt.Sub(time.Now()).Seconds()),
 			UserID:    session.UserId.String(),
 		}, nil
 	})

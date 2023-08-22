@@ -54,3 +54,24 @@ func (db DB) SaveSession(session store.Session, opts store.QueryOptions) error {
 
 	return nil
 }
+
+func (db DB) DeleteSession(token string, opts store.QueryOptions) error {
+	const query = `
+        DELETE FROM
+            session
+        WHERE
+            token = ?
+    `
+
+	res, err := db.querier(opts.Txn).ExecContext(opts.Context(), query, token)
+	if err != nil {
+		return err
+	}
+
+	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return store.NotFoundError{ResourceType: "session", ResourceID: token}
+	}
+
+	return nil
+}

@@ -61,6 +61,7 @@ type ClientRepository interface {
 	SaveClient(user Client, opts QueryOptions) error
 	DeleteClient(id uuid.UUID, opts QueryOptions) error
 
+	GetClientAPIKey(clientID uuid.UUID, prefix string, opts QueryOptions) (APIKey, error)
 	ListClientAPIKeys(clientID uuid.UUID, opts QueryOptions) ([]APIKey, error)
 	InsertAPIKey(key NewAPIKey, opts QueryOptions) (uuid.UUID, error)
 	DeleteClientAPIKey(clientID, keyID uuid.UUID, opts QueryOptions) error

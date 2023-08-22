@@ -48,6 +48,7 @@ type ClientService interface {
 type AuthService interface {
 	Login(ctx context.Context, username, password string) (auth.Token, error)
 	IntrospectToken(ctx context.Context, token string) (auth.TokenInfo, error)
+	ValidateAPIKey(ctx context.Context, key string) error
 }
 
 // NewServer builds a new server object with the default middleware and router

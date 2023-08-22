@@ -32,7 +32,7 @@ func (s *Server) handleAuthLogin() http.HandlerFunc {
 		}
 
 		http.SetCookie(w, &http.Cookie{
-			Name:     "session",
+			Name:     SessionCookieName,
 			Value:    token.AccessToken,
 			Path:     "/",
 			Secure:   true,

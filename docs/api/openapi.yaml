@@ -17,15 +17,17 @@ tags:
   - name: Clients
     description: Manage clients
 
+
+security:
+  - apiKeyAuth: []
+  - cookieAuth: []
+
 paths:
   /users:
     get:
       summary: Returns a list of users
       operationId: getUsers
       tags: [Users]
-      security:
-        - apiKeyAuth: []
-        - sessionToken: []
       responses:
         '200':
           description: A list of users
@@ -388,7 +390,7 @@ paths:
       operationId: authLogout
       tags: [Auth]
       security: 
-        - sessionCookie: []
+        - cookieAuth: []
       responses:
         '204':
           description: >

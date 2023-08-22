@@ -1,7 +1,6 @@
 package http
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/ninth-realm/heimdall/auth"
@@ -37,10 +36,39 @@ func (s *Server) handleAuthLogin() http.HandlerFunc {
 			Path:     "/",
 			Secure:   true,
 			HttpOnly: true,
+			SameSite: http.SameSiteLaxMode,
 			MaxAge:   token.Lifespan,
 		})
 
 		s.respond(w, r, http.StatusOK, token)
+	})
+}
+
+func (s *Server) handleAuthLogout() http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token, err := r.Cookie(SessionCookieName)
+		if err != nil {
+			// No session cookie means nothing to do.
+			s.respond(w, r, http.StatusNoContent, nil)
+			return
+		}
+
+		err = s.AuthService.Logout(r.Context(), token.Value)
+		if err != nil {
+			s.respondWithError(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     SessionCookieName,
+			Value:    "",
+			Path:     "/",
+			Secure:   true,
+			HttpOnly: true,
+			MaxAge:   -1,
+		})
+
+		s.respond(w, r, http.StatusNoContent, nil)
 	})
 }
 
@@ -60,7 +88,6 @@ func (s *Server) handleAuthIntrospect() http.HandlerFunc {
 		if err != nil {
 			token = auth.TokenInfo{Active: false}
 			s.respond(w, r, http.StatusUnauthorized, token)
-			fmt.Println(err.Error())
 			return
 		}
 

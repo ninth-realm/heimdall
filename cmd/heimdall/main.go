@@ -40,12 +40,22 @@ func run() error {
 		return err
 	}
 
+	config, err := readConfig(flags.configPath)
+	if err != nil {
+		return err
+	}
+
 	var db sqlite.DB
-	switch flags.storeDriver {
+	switch config.Driver {
 	case "mem":
 		db, err = getSqliteDB("file::memory:", true)
+		db.UUIDGenerator = uuidV4Fn(uuid.NewV4)
 	case "sqlite":
-		db, err = getSqliteDB("file:db/data/heimdall-dev.db?mode=rwc", flags.runMigrations)
+		db, err = getSqliteDB(
+			fmt.Sprintf("file:%s?mode=rwc", config.SQLite.Path),
+			flags.runMigrations,
+		)
+		db.UUIDGenerator = uuidV4Fn(uuid.NewV4)
 	default:
 		return errors.New("unknown driver")
 	}
@@ -53,9 +63,8 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	db.UUIDGenerator = uuidV4Fn(uuid.NewV4)
 
-	logger.Info("Using DB driver: %s", flags.storeDriver)
+	logger.Info("Using DB driver: %s", config.Driver)
 
 	return buildServer(db).ListenAndServe(fmt.Sprintf(":%d", flags.port))
 }
@@ -63,17 +72,17 @@ func run() error {
 type flags struct {
 	port          int
 	logLevel      string
-	storeDriver   string
 	runMigrations bool
+	configPath    string
 }
 
 func initFlags() flags {
 	var fs flags
 
-	flag.IntVar(&fs.port, "port", 8080, "port to run on")
-	flag.StringVar(&fs.storeDriver, "driver", "mem", "Database driver: mem, sqlite")
-	flag.BoolVar(&fs.runMigrations, "migrate", false, "Prevent migrating db. Ignored for mem driver.")
+	flag.IntVar(&fs.port, "port", 8080, "Port to run on.")
+	flag.BoolVar(&fs.runMigrations, "migrate", false, "Run db migrations. Ignored for mem driver.")
 	flag.StringVar(&fs.logLevel, "log-level", "info", "Min log level: debug, info, warn, error, fatal")
+	flag.StringVar(&fs.configPath, "config", "./config.json", "Path to the config file.")
 
 	flag.Parse()
 
@@ -85,15 +94,7 @@ func buildServer(db store.Repository) *http.Server {
 	srv.Logger, _ = level.NewBasicLogger(level.Info, nil)
 	srv.UserService = user.Service{Repo: db}
 	srv.ClientService = client.Service{Repo: db}
-	srv.AuthService = auth.Service{
-		Repo: db,
-		JWTSettings: auth.JWTSettings{
-			Issuer:     "heimdall",
-			Lifespan:   900,
-			SigningKey: "so-secret-wow",
-			Algorithm:  auth.HMAC256Algorithm,
-		},
-	}
+	srv.AuthService = auth.Service{Repo: db}
 
 	return srv
 }

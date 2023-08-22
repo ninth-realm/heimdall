@@ -14,8 +14,6 @@ import (
 
 type Service struct {
 	Repo store.Repository
-
-	JWTSettings JWTSettings
 }
 
 func (s Service) Login(ctx context.Context, username, password string) (Token, error) {

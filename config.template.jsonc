@@ -1,0 +1,8 @@
+{
+    // The database driver to choose from. One of: mem, sqlite
+    "driver": "mem",
+    "sqlite": {
+        // The relative or absolute path to the SQLite database file
+        "path": ""
+    }
+}

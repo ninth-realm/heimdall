@@ -120,9 +120,9 @@ func (s *Server) respond(w http.ResponseWriter, r *http.Request, status int, dat
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(status)
 
-    if status == http.StatusNoContent {
-        return
-    }
+	if status == http.StatusNoContent {
+		return
+	}
 
 	err := json.NewEncoder(w).Encode(envelope{Response: data})
 	if err != nil {

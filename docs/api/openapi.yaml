@@ -1,0 +1,571 @@
+openapi: "3.1.0"
+
+info:
+  title: Heimdall
+  description: Simple auth server
+  version: 0.0.1
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Development server
+
+tags:
+  - name: Auth
+    description: Session management
+  - name: Users
+    description: Manage users
+  - name: Clients
+    description: Manage clients
+
+
+security:
+  - apiKeyAuth: []
+  - cookieAuth: []
+
+paths:
+  /users:
+    get:
+      summary: Returns a list of users
+      operationId: getUsers
+      tags: [Users]
+      responses:
+        '200':
+          description: A list of users
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+
+    post:
+      summary: Create a new user
+      operationId: postUsers
+      tags: [Users]
+      requestBody:
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [firstName, lastName, email]
+                properties:
+                  firstName:
+                    type: string
+                    minLength: 1
+                    example: John
+                  lastName:
+                    type: string
+                    minLength: 1
+                    example: Doe
+                  email:
+                    type: string
+                    format: email
+                    example: john.doe@example.com
+                  password:
+                    description: An optional password to set for the new user
+                    type: string
+      responses:
+        '201':
+          description: The new user
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    $ref: '#/components/schemas/User'
+
+  /users/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+
+    get:
+      summary: Returns a user
+      operationId: getUserById
+      tags: [Users]
+      responses:
+        '200':
+          description: A user
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    $ref: '#/components/schemas/User'
+
+    patch:
+      summary: Update a user
+      operationId: patchUserById
+      tags: [Users]
+      requestBody:
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  firstName:
+                    type: string
+                    minLength: 1
+                    example: John
+                  lastName:
+                    type: string
+                    minLength: 1
+                    example: Doe
+      responses:
+        '200':
+          description: The updated user
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    $ref: '#/components/schemas/User'
+
+    delete:
+      summary: Delete a user
+      operationId: deleteUserById
+      tags: [Users]
+      responses:
+        '204':
+          description: User deleted
+
+  /clients:
+    get:
+      summary: Returns a list of clients
+      operationId: getClients
+      tags: [Clients]
+      responses:
+        '200':
+          description: A list of clients
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Client'
+
+    post:
+      summary: Create a new client
+      operationId: postClients
+      tags: [Clients]
+      requestBody:
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [name, enabled]
+                properties:
+                  name:
+                    type: string
+                    minLength: 1
+                    example: Bifrost
+                  enabled:
+                    type: boolean
+                    example: true
+      responses:
+        '201':
+          description: The new client
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    $ref: '#/components/schemas/Client'
+
+  /clients/{clientId}:
+    parameters:
+      - name: clientId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+
+    get:
+      summary: Returns a client
+      operationId: getClientById
+      tags: [Clients]
+      responses:
+        '200':
+          description: A client
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    $ref: '#/components/schemas/Client'
+
+    patch:
+      summary: Update a client
+      operationId: patchClientById
+      tags: [Clients]
+      requestBody:
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  name:
+                    type: string
+                    minLength: 1
+                    example: Bifrost
+                  enabled:
+                    type: boolean
+                    example: true
+      responses:
+        '200':
+          description: The updated client
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    $ref: '#/components/schemas/Client'
+
+    delete:
+      summary: Delete a client
+      operationId: deleteClientById
+      tags: [Clients]
+      responses:
+        '204':
+          description: Client deleted
+
+  /clients/{clientId}/api-keys:
+    parameters:
+      - name: clientId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+
+    get:
+      summary: Return a client's API keys
+      operationId: getClientApiKeys
+      tags: [Clients]
+      responses:
+        '200':
+          description: A client's API keys
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApiKey'
+
+    post:
+      summary: Generate an API key
+      operationId: postClientApiKeys
+      tags: [Clients]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  nullable: true
+                  example: Bifrost key
+      responses:
+        '201':
+          description: The API key
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    type: object
+                    properties:
+                      key:
+                        $ref: '#/components/schemas/ApiKeyToken'
+
+  /clients/{clientId}/api-keys/{keyId}:
+    parameters:
+      - name: clientId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+
+      - name: keyId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+
+    delete:
+      summary: Delete and API key
+      operationId: deleteClientApiKey
+      tags: [Clients]
+      responses:
+        '204':
+          description: API key deleted
+
+  /auth/login:
+    post:
+      summary: Retrieve an access token
+      operationId: authLogin
+      tags: [Auth]
+      security: []
+      requestBody:
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [username, password]
+                properties:
+                  username:
+                    type: string
+                    minLength: 1
+                    example: test@test.com
+                  password:
+                    type: string
+                    minLength: 1
+                    example: password123!
+      responses:
+        '204':
+          description: >
+            Successfully authenticated.
+            The session ID is returned in a cookie named `heimdall_sessionToken`.
+            This cookie must be included in subsequent requests.
+          headers: 
+            Set-Cookie:
+              schema: 
+                type: string
+                example: heimdall_sessionToken=XdMIzEPHxFcFyVGnzpUkHLZZP0/VEftTqI/+9CaarhE=; Path=/; Max-Age=86400; HttpOnly; Secure; SameSite=Lax
+        '401':
+          description: Invalid login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    enum: [401]
+                    example: 401
+                  error:
+                    type: string
+                    example: invalid password
+
+  /auth/logout:
+    post:
+      summary: End an existing session
+      operationId: authLogout
+      tags: [Auth]
+      security: 
+        - cookieAuth: []
+      responses:
+        '204':
+          description: >
+            Session ended.
+            The session token associated with the request will be invalidated and
+            all subsequent requests with the token will fail authentication.
+          headers: 
+            Set-Cookie:
+              schema: 
+                type: string
+                example: heimdall_sessionToken=; Path=/; Max-Age=0; HttpOnly; Secure
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    enum: [500]
+                    example: 500
+                  error:
+                    type: string
+                    example: Internal Server Error
+
+  /auth/introspect:
+    post:
+      summary: Retrieve info about a session
+      operationId: authIntrospect
+      tags: [Auth]
+      requestBody:
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [token]
+                properties:
+                  token:
+                    type: string
+                    example: zkLD9L/c6y8Z1GyyKt+Wka8EUIVmAdxnM/hDs8yzQco=
+                    minLength: 1
+      responses:
+        '200':
+          description: Successful introspection
+          content:
+            application/json:
+              schema: 
+                type: object
+                required: [response]
+                properties:
+                  response:
+                    $ref: '#/components/schemas/TokenInfo'
+        '400':
+          description: Invalid session token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    enum: [400]
+                    example: 400
+                  error:
+                    type: string
+                    example: invalid password
+        '401':
+          description: Invalid auth token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    enum: [401]
+                    example: 401
+                  error:
+                    type: string
+                    example: invalid password
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        firstName:
+          type: string
+          minLength: 1
+          example: John
+        lastName:
+          type: string
+          minLength: 1
+          example: Doe
+        email:
+          type: string
+          format: email
+          example: john.doe@example.com
+        createdAt:
+          $ref: '#/components/schemas/DateTime'
+        updatedAt:
+          $ref: '#/components/schemas/DateTime'
+
+    TokenInfo:
+      type: object
+      properties:
+        active:
+          type: boolean
+          description: If the session is currently active.
+        sub:
+          type: string
+          description: |
+            The UUID of the user who owns the session.
+          example: 8851294f-1232-43b5-b605-0040479d5373
+        exp:
+          type: integer
+          minimum: 0
+          description: |
+            The number of seconds until the access token expires.
+          example: 900
+
+    Client:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        name:
+          type: string
+          minLength: 1
+          example: Bifrost
+        enabled:
+          type: boolean
+          example: true
+        createdAt:
+          $ref: '#/components/schemas/DateTime'
+        updatedAt:
+          $ref: '#/components/schemas/DateTime'
+
+    ApiKey:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        description:
+          type: string
+          nullable: true
+          example: Bifrost key
+        prefix:
+          type: string
+          description: |
+            The unhashed prefix of the key that allows a key to be identified and
+            referenced.
+          pattern: /[a-f0-9]{6}/    
+          example: 73ad03
+        createdAt:
+          $ref: '#/components/schemas/DateTime'
+        updatedAt:
+          $ref: '#/components/schemas/DateTime'
+
+    Id:
+      type: string
+      format: uuid
+      example: 00000000-0000-0000-0000-000000000000
+
+    ApiKeyToken:
+      type: string
+      pattern: /[a-f0-9]{6}\.[a-zA-Z0-9\/=]+/
+      example: 73ad03.2MQeQnc4smT0cwAl1FRBSk20lCEkmSz5Hg4bcGEuWDo=
+
+    DateTime:
+      type: string
+      format: date-time
+      example: 2023-01-01T00:00:00Z
+
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: heimdall_sessionToken

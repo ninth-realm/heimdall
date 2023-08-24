@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"flag"
 	"fmt"
 	"os"
 
@@ -28,19 +27,14 @@ func main() {
 }
 
 func run() error {
-	flags := initFlags()
+	config, err := loadConfig()
 
-	logLevel, err := level.ParseLevel(flags.logLevel)
+	logLevel, err := level.ParseLevel(config.logLevel)
 	if err != nil {
 		return err
 	}
 
 	logger, err := level.NewBasicLogger(logLevel, nil)
-	if err != nil {
-		return err
-	}
-
-	config, err := readConfig(flags.configPath)
 	if err != nil {
 		return err
 	}
@@ -53,7 +47,7 @@ func run() error {
 	case "sqlite":
 		db, err = getSqliteDB(
 			fmt.Sprintf("file:%s?mode=rwc", config.SQLite.Path),
-			flags.runMigrations,
+			config.runMigrations,
 		)
 		db.UUIDGenerator = uuidV4Fn(uuid.NewV4)
 	default:
@@ -66,32 +60,13 @@ func run() error {
 
 	logger.Info("Using DB driver: %s", config.Driver)
 
-	return buildServer(db).ListenAndServe(fmt.Sprintf(":%d", flags.port))
+	return buildServer(config, db).ListenAndServe(fmt.Sprintf(":%d", config.port))
 }
 
-type flags struct {
-	port          int
-	logLevel      string
-	runMigrations bool
-	configPath    string
-}
-
-func initFlags() flags {
-	var fs flags
-
-	flag.IntVar(&fs.port, "port", 8080, "Port to run on.")
-	flag.BoolVar(&fs.runMigrations, "migrate", false, "Run db migrations. Ignored for mem driver.")
-	flag.StringVar(&fs.logLevel, "log-level", "info", "Min log level: debug, info, warn, error, fatal")
-	flag.StringVar(&fs.configPath, "config", "./config.json", "Path to the config file.")
-
-	flag.Parse()
-
-	return fs
-}
-
-func buildServer(db store.Repository) *http.Server {
+func buildServer(config Config, db store.Repository) *http.Server {
 	srv := http.NewServer()
 	srv.Logger, _ = level.NewBasicLogger(level.Info, nil)
+	srv.DisableAuth = config.setupMode
 	srv.UserService = user.Service{Repo: db}
 	srv.ClientService = client.Service{Repo: db}
 	srv.AuthService = auth.Service{Repo: db}

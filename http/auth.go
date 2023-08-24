@@ -13,6 +13,11 @@ var authErr = errors.New("missing or invalid auth token")
 
 func (s *Server) authenticateRoute(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if s.DisableAuth {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		err := s.authenticateAPIKey(r)
 		if err == nil {
 			next.ServeHTTP(w, r)

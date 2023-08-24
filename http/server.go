@@ -20,6 +20,11 @@ type Server struct {
 	Logger level.Logger
 	Router chi.Router
 
+	// DisableAuth skips all configured auth checks on all routes. This setting
+	// is intended to be used in setup mode to allow initial users and clients
+	// to be created.
+	DisableAuth bool
+
 	UserService   UserService
 	ClientService ClientService
 	AuthService   AuthService
@@ -76,6 +81,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (s *Server) ListenAndServe(addr string) error {
 	if s.Logger == nil {
 		s.Logger, _ = level.NewBasicLogger(level.Info, nil)
+	}
+
+	if s.DisableAuth {
+		s.Logger.Warn("Starting server in setup mode. All routes are unprotected.")
 	}
 
 	s.Logger.Info("Server listening on %s", addr)

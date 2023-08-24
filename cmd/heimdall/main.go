@@ -28,6 +28,9 @@ func main() {
 
 func run() error {
 	config, err := loadConfig()
+	if err != nil {
+		return err
+	}
 
 	logLevel, err := level.ParseLevel(config.logLevel)
 	if err != nil {
@@ -60,12 +63,12 @@ func run() error {
 
 	logger.Info("Using DB driver: %s", config.Driver)
 
-	return buildServer(config, db).ListenAndServe(fmt.Sprintf(":%d", config.port))
+	return buildServer(config, db, logger).ListenAndServe(fmt.Sprintf(":%d", config.port))
 }
 
-func buildServer(config Config, db store.Repository) *http.Server {
+func buildServer(config Config, db store.Repository, logger level.Logger) *http.Server {
 	srv := http.NewServer()
-	srv.Logger, _ = level.NewBasicLogger(level.Info, nil)
+	srv.Logger = logger
 	srv.DisableAuth = config.setupMode
 	srv.UserService = user.Service{Repo: db}
 	srv.ClientService = client.Service{Repo: db}
